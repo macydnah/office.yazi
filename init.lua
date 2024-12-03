@@ -31,18 +31,18 @@ function M:convert_to_pdf()
 		return pdf_file
 	else
 		-- Si no existe, convertir el archivo DOCX a PDF
-		local cmd = "libreoffice --headless --convert-to pdf --outdir " .. tmp_dir .. " " .. tostring(self.file.url)
+--[[ 
+		local office_to_pdf = Command("libreoffice")
+			:args({ "--headless", "--convert-to pdf", "--outdir", tmp_dir, tostring(self.file.url) })
+			:stdout(Command.NULL)
+			:stderr(Command.NULL)
+			:output()
+--]]
+		local cmd = "libreoffice --headless --convert-to pdf --outdir " .. tmp_dir .. " " .. tostring(self.file.url) .. " &>/dev/null"
 		result = os.execute(cmd)
 		-- Devolvemos el URL del PDF generado
 		return pdf_file
 	end
---[[
-	local office_to_pdf = Command("libreoffice")
-		:args({ "--headless", "--convert-to pdf", "--outdir", tmp_dir, tostring(self.file.url) })
-		:stdout(Command.PIPED)
-		:stderr(Command.PIPED)
-		:output()
---]]
 
 end
 
@@ -52,7 +52,11 @@ function M:preload()
 	ya.err("El ya.file_cache es :" .. tostring(cache))
 
 	if not cache or fs.cha(cache) then
+		local cha, err = fs.cha(cache)
+		ya.err("Ahora veamos que hay en fs.cha(cache): " .. tostring(cha))
+		ya.err("Ahora veamos que hay en fs.cha(cache) pero el err: " .. tostring(err))
 		ya.err("Por alguna razón inexplicable esta condición se cumple.")
+		-- return 1
 	end
 
 	local pdf_file = self:convert_to_pdf()
@@ -62,6 +66,16 @@ function M:preload()
 		:stdout(Command.PIPED)
 		:stderr(Command.PIPED)
 		:output()
+
+	if not output then
+		return 0
+	elseif not output.status.success then
+		local pages = tonumber(output.stderr:match("the last page %((%d+)%)")) or 0
+		if self.skip > 0 and pages > 0 then
+			ya.manager_emit("peek", { math.max(0, pages - 1), only_if = self.file.url, upper_bound = true })
+		end
+		return 0
+	end
 
 
 	ya.err("esto si quiera llega a ejecutarse??")
