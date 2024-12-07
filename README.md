@@ -3,7 +3,7 @@
 # office.yazi
 ### A plugin to preview office documents in <a href="https://github.com/sxyazi/yazi">Yazi <img src="https://github.com/sxyazi/yazi/blob/main/assets/logo.png?raw=true" alt="a duck" width="24px" height="24px"></a>
 
-<img src="https://github.com/user-attachments/assets/57b34ead-5f85-474d-90ab-3fc49ab1cbbe" alt="preview test" width="77%">
+<img src="https://github.com/macydnah/office.yazi/blob/assets/preview_test.gif" alt="preview test" width="88%">
 
 ##
 
