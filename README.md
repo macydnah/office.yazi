@@ -16,7 +16,7 @@
 > 
 > To install it with `ya` run:
 > ```sh
-> ya pack -a macydnah/office.yazi 
+> ya pack -a macydnah/office
 > ```
 
 > Or if you prefer a manual approach:
