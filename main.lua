@@ -20,44 +20,20 @@ end
 
 function M:seek(job)
 	local h = cx.active.current.hovered
-	ya.dbg("Linea 23")
-	ya.dbg("El url de cx.active.current.hovered es: " .. tostring(h.url))
 	if h and h.url == job.file.url then
 		local step = ya.clamp(-1, job.units, 1)
-		ya.dbg("Linea 27")
-		ya.dbg("El valor de los `steps` es: " .. tostring(step))
-		ya.dbg("Linea 29")
-		ya.dbg("El valor de cx.active.preview.skip es: " .. tostring(cx.active.preview.skip))
-		ya.dbg("Linea 31")
-		ya.dbg("El valor de `math.max(cx.active.preview.skip + step)` es: " .. math.max(0, cx.active.preview.skip + step))
 		ya.manager_emit("peek", { math.max(0, cx.active.preview.skip + step), only_if = job.file.url })
 	end
 end
 
-function M:document_to_pdf(job)
---[[
-	if ya.target_family() = "unix" then
-		local user_id = ya.uid()
-	end
---]]
-	local tmp = "/tmp/yazi-" .. ya.uid() .. "/office.yazi/"
-	ya.dbg("Linea 44: el valor de `tmp` es: " .. tmp)
-	local pdf_file = tmp .. job.file.name:gsub("%..*$", ".pdf")
-	ya.dbg("Linea 46")
-	ya.dbg("El valor de `job.skip + 1` es: " .. job.skip + 1)
-
-	local read_permissions = io.open(pdf_file, "r")
-	if read_permissions then
-		ya.dbg("Linea 51: si hay permisos de lectura")
-		read_permissions:close()
-	end
-
-	ya.dbg("Linea 55")
-	ya.dbg(tostring(job.file.url))
+function M:doc2pdf(job, tmp_dir)
 	local convert = Command("libreoffice")
 		:args({
 			"--headless",
-			"--convert-to",
+	-------------------------------------------------------------
+--[[	Dont't forget this below is wrong and must say "--convert-to"	--]]
+	-------------------------------------------------------------
+			"--convert-to-pato-donald",
 			"pdf:draw_pdf_Export:{" ..
 				"\"PageRange\":{" ..
 					"\"type\":\"string\"," ..
@@ -65,25 +41,39 @@ function M:document_to_pdf(job)
 				"}" ..
 			"}",
 			"--outdir",
-			tmp,
+			tmp_dir,
 			tostring(job.file.url)
 		})
 		:stdout(Command.NULL)
 		:stderr(Command.NULL)
 		:output()
+		
+	ya.dbg("Linea 51: El valor de convert.status es: " .. tostring(convert.status.success))
+
+	local tmp_pdf = tmp_dir .. job.file.name:gsub("%..*$", ".pdf")
+	local read_permission = io.open(tmp_pdf, "r")
+	if not read_permission then
+		return nil, Err("    office.yazi/main.lua:29: `function M:doc2pdf()`:54: Failed to read `%s`", tmp_pdf)
+	end
 	
-	return pdf_file
+	read_permission:close()
+	return tmp_pdf
 end
 
 function M:preload(job)
 	local cache = ya.file_cache(job)
-	ya.dbg("Linea 80")
-	ya.dbg(tostring(cache))
 	if not cache or fs.cha(cache) then
 		return true
 	end
 
-	local pdf_file = self:document_to_pdf(job)
+	local tmp_dir = "/tmp/yazi-" .. ya.uid() .. "/office.yazi/"
+	local tmp_pdf, err = self:doc2pdf(job, tmp_dir)
+	--ya.dbg("Linea 71: El valor de tmp_pdf en `preload()` es: " .. tmp_pdf)
+	if not tmp_pdf then
+		ya.dbg("Linea 73: `if not tmp_pdf` was true")
+		return true, Err("%s", err)
+	end
+
 	local output, err = Command("pdftoppm")
 		:args({
 			"-singlefile",
@@ -92,7 +82,7 @@ function M:preload(job)
 			"quality=" .. PREVIEW.image_quality,
 			"-f",
 			1,
-			tostring(pdf_file),
+			tostring(tmp_pdf),
 		})
 		:stdout(Command.PIPED)
 		:stderr(Command.PIPED)
