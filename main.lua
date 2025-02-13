@@ -27,7 +27,7 @@ function M:seek(job)
 end
 
 function M:doc2pdf(job)
-	local tmp = "/tmp/yazi-" .. ya.uid() .. "/office.yazi/"
+	local tmp = "/tmp/yazi-" .. ya.uid() .. "/" .. ya.hash("office.yazi") .. "/"
 
 --[[	For Future Reference: Regarding `libreoffice` as preconverter
 	  1. It prints errors to stdout (always, doesn't matter if it succeeded or it failed)
