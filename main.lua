@@ -30,7 +30,7 @@ function M:doc2pdf(job)
 	local tmp = "/tmp/yazi-" .. ya.uid() .. "/office.yazi/"
 
 --[[	For Future Reference: Regarding `libreoffice` as preconverter
-	  1. It prints errors to stdout (always, doesn't matter if succeeded or failed)
+	  1. It prints errors to stdout (always, doesn't matter if it succeeded or it failed)
 	  2. Always writes the converted files to the filesystem (so no Mario|Bros|Piping|Magic|To>stdout) --]]
 	local libreoffice = Command("libreoffice")
 		:args({
