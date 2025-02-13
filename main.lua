@@ -26,14 +26,14 @@ function M:seek(job)
 	end
 end
 
-function M:doc2pdf(job, tmp_dir)
-	local convert = Command("libreoffice")
+function M:doc2pdf(job)
+	local tmp = "/tmp/yazi-" .. ya.uid() .. "/office.yazi/"
+
+	-- For Future Reference: even on failing, `libreoffice` always print to stdout
+	local libreoffice = Command("libreoffice")
 		:args({
 			"--headless",
-	-------------------------------------------------------------
---[[	Dont't forget this below is wrong and must say "--convert-to"	--]]
-	-------------------------------------------------------------
-			"--convert-to-pato-donald",
+			"--convert-to",
 			"pdf:draw_pdf_Export:{" ..
 				"\"PageRange\":{" ..
 					"\"type\":\"string\"," ..
@@ -41,23 +41,27 @@ function M:doc2pdf(job, tmp_dir)
 				"}" ..
 			"}",
 			"--outdir",
-			tmp_dir,
+			tmp,
 			tostring(job.file.url)
 		})
-		:stdout(Command.NULL)
+		:stdin(Command.NULL)
+		:stdout(Command.PIPED)
 		:stderr(Command.NULL)
 		:output()
 		
-	ya.dbg("Linea 51: El valor de convert.status es: " .. tostring(convert.status.success))
+	if not libreoffice.status.success then
+		ya.err(libreoffice.stdout:match("LibreOffice .+"):gsub("%\n.*", "") .. " " .. libreoffice.stdout:match("Error .+"):gsub("%\n.*", ""))
+		return nil, Err("Failed to convert " .. job.file.name .. " to temporary PDF")
+	end
 
-	local tmp_pdf = tmp_dir .. job.file.name:gsub("%..*$", ".pdf")
-	local read_permission = io.open(tmp_pdf, "r")
+	local tmp = tmp .. job.file.name:gsub("%..*$", ".pdf")
+	local read_permission = io.open(tmp, "r")
 	if not read_permission then
-		return nil, Err("    office.yazi/main.lua:29: `function M:doc2pdf()`:54: Failed to read `%s`", tmp_pdf)
+		return nil, Err("Failed to read `%s`: make sure file exists and have read access", tmp)
 	end
 	
 	read_permission:close()
-	return tmp_pdf
+	return tmp
 end
 
 function M:preload(job)
@@ -66,12 +70,9 @@ function M:preload(job)
 		return true
 	end
 
-	local tmp_dir = "/tmp/yazi-" .. ya.uid() .. "/office.yazi/"
-	local tmp_pdf, err = self:doc2pdf(job, tmp_dir)
-	--ya.dbg("Linea 71: El valor de tmp_pdf en `preload()` es: " .. tmp_pdf)
+	local tmp_pdf, err = self:doc2pdf(job)
 	if not tmp_pdf then
-		ya.dbg("Linea 73: `if not tmp_pdf` was true")
-		return true, Err("%s", err)
+		return true, Err("    " .. "%s", err)
 	end
 
 	local output, err = Command("pdftoppm")
