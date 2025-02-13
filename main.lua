@@ -91,6 +91,11 @@ function M:preload(job)
 		:stderr(Command.PIPED)
 		:output()
 
+	local rm_tmp_pdf, rm_err = fs.remove("file", Url(tmp_pdf))
+	if not rm_tmp_pdf then
+		return true, Err("Failed to remove %s, error: %s", tmp_pdf, rm_err)
+	end
+
 	if not output then
 		return true, Err("Failed to start `pdftoppm`, error: %s", err)
 	elseif not output.status.success then
