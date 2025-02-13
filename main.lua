@@ -29,8 +29,8 @@ end
 function M:doc2pdf(job)
 	local tmp = "/tmp/yazi-" .. ya.uid() .. "/office.yazi/"
 
---[[	For Future Reference: Regarding `libreoffice`
-	  1. It prints errors to stdout (always, doesn't matter if succeed or failed)
+--[[	For Future Reference: Regarding `libreoffice` as preconverter
+	  1. It prints errors to stdout (always, doesn't matter if succeeded or failed)
 	  2. Always writes the converted files to the filesystem (so no Mario|Bros|Piping|Magic|To>stdout) --]]
 	local libreoffice = Command("libreoffice")
 		:args({
@@ -53,7 +53,7 @@ function M:doc2pdf(job)
 		
 	if not libreoffice.status.success then
 		ya.err(libreoffice.stdout:match("LibreOffice .+"):gsub("%\n.*", "") .. " " .. libreoffice.stdout:match("Error .+"):gsub("%\n.*", ""))
-		return nil, Err("Failed to convert " .. job.file.name .. " to temporary PDF")
+		return nil, Err("Failed to preconvert `%s` to a temporary PDF", job.file.name)
 	end
 
 	local tmp = tmp .. job.file.name:gsub("%..*$", ".pdf")
@@ -61,8 +61,8 @@ function M:doc2pdf(job)
 	if not read_permission then
 		return nil, Err("Failed to read `%s`: make sure file exists and have read access", tmp)
 	end
-	
 	read_permission:close()
+
 	return tmp
 end
 
@@ -98,7 +98,7 @@ function M:preload(job)
 		if job.skip > 0 and pages > 0 then
 			ya.manager_emit("peek", { math.max(0, pages - 1), only_if = job.file.url, upper_bound = true })
 		end
-		return true, Err("Failed to convert PDF to image, stderr: %s", output.stderr)
+		return true, Err("Failed to convert %s to image, stderr: %s", tmp_pdf, output.stderr)
 	end
 
 	return fs.write(cache, output.stdout)
