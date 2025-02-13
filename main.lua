@@ -29,7 +29,9 @@ end
 function M:doc2pdf(job)
 	local tmp = "/tmp/yazi-" .. ya.uid() .. "/office.yazi/"
 
-	-- For Future Reference: even on failing, `libreoffice` always print to stdout
+--[[	For Future Reference: Regarding `libreoffice`
+	  1. It prints errors to stdout (always, doesn't matter if succeed or failed)
+	  2. Always writes the converted files to the filesystem (so no Mario|Bros|Piping|Magic|To>stdout) --]]
 	local libreoffice = Command("libreoffice")
 		:args({
 			"--headless",
