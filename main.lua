@@ -56,7 +56,7 @@ function M:doc2pdf(job)
 		return nil, Err("Failed to preconvert `%s` to a temporary PDF", job.file.name)
 	end
 
-	local tmp = tmp .. job.file.name:gsub("%..*$", ".pdf")
+	local tmp = tmp .. job.file.name:gsub("%.[^%.]+$", ".pdf")
 	local read_permission = io.open(tmp, "r")
 	if not read_permission then
 		return nil, Err("Failed to read `%s`: make sure file exists and have read access", tmp)
