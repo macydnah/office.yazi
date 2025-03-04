@@ -42,18 +42,18 @@ For a general usecase, you may use the following rules
 
 prepend_preloaders = [
     # Office Documents
-    { mime = "application/vnd.openxmlformats-officedocument.*", run = "office" },
-    { mime = "application/vnd.oasis.opendocument.*", run = "office" },
-    { mime = "application/vnd.ms-*", run = "office" },
+    { mime = "application/openxmlformats-officedocument.*", run = "office" },
+    { mime = "application/oasis.opendocument.*", run = "office" },
+    { mime = "application/ms-*", run = "office" },
     { mime = "application/msword", run = "office" },
     { name = "*.docx", run = "office" },
 ]
 
 prepend_previewers = [
     # Office Documents
-    { mime = "application/vnd.openxmlformats-officedocument.*", run = "office" },
-    { mime = "application/vnd.oasis.opendocument.*", run = "office" },
-    { mime = "application/vnd.ms-*", run = "office" },
+    { mime = "application/openxmlformats-officedocument.*", run = "office" },
+    { mime = "application/oasis.opendocument.*", run = "office" },
+    { mime = "application/ms-*", run = "office" },
     { mime = "application/msword", run = "office" },
     { name = "*.docx", run = "office" },
 ]
