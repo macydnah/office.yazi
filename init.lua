@@ -29,30 +29,40 @@ end
 function M:doc2pdf(job)
 	local tmp = "/tmp/yazi-" .. ya.uid() .. "/" .. ya.hash("office.yazi") .. "/"
 
---[[	For Future Reference: Regarding `libreoffice` as preconverter
+	--[[	For Future Reference: Regarding `libreoffice` as preconverter
 	  1. It prints errors to stdout (always, doesn't matter if it succeeded or it failed)
 	  2. Always writes the converted files to the filesystem (so no Mario|Bros|Piping|Magic|To>stdout) --]]
+
 	local libreoffice = Command("libreoffice")
 		:args({
 			"--headless",
 			"--convert-to",
-			"pdf:draw_pdf_Export:{" ..
-				"\"PageRange\":{" ..
-					"\"type\":\"string\"," ..
-					"\"value\":" .. "\"" .. job.skip + 1 .. "\"" ..
-				"}" ..
-			"}",
+			"pdf:draw_pdf_Export",
+			"--convert-to",
+			"pdf:draw_pdf_Export:{"
+				.. '"PageRange":{'
+				.. '"type":"string",'
+				.. '"value":'
+				.. '"'
+				.. job.skip + 1
+				.. '"'
+				.. "}"
+				.. "}",
 			"--outdir",
 			tmp,
-			tostring(job.file.url)
+			tostring(job.file.url),
 		})
 		:stdin(Command.NULL)
 		:stdout(Command.PIPED)
 		:stderr(Command.NULL)
 		:output()
-		
+
 	if not libreoffice.status.success then
-		ya.err(libreoffice.stdout:match("LibreOffice .+"):gsub("%\n.*", "") .. " " .. libreoffice.stdout:match("Error .+"):gsub("%\n.*", ""))
+		ya.err(
+			libreoffice.stdout:match("LibreOffice .+"):gsub("%\n.*", "")
+				.. " "
+				.. libreoffice.stdout:match("Error .+"):gsub("%\n.*", "")
+		)
 		return nil, Err("Failed to preconvert `%s` to a temporary PDF", job.file.name)
 	end
 
