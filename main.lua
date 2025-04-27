@@ -103,7 +103,7 @@ function M:preload(job)
 	elseif not output.status.success then
 		local pages = tonumber(output.stderr:match("the last page %((%d+)%)")) or 0
 		if job.skip > 0 and pages > 0 then
-			ya.manager_emit("peek", { math.max(0, pages - 1), only_if = job.file.url, upper_bound = true })
+			ya.mgr_emit("peek", { math.max(0, pages - 1), only_if = job.file.url, upper_bound = true })
 		end
 		return true, Err("Failed to convert %s to image, stderr: %s", tmp_pdf, output.stderr)
 	end
