@@ -29,32 +29,39 @@ end
 function M:doc2pdf(job)
 	local tmp = "/tmp/yazi-" .. ya.uid() .. "/" .. ya.hash("office.yazi") .. "/"
 
---[[	For Future Reference: Regarding `libreoffice` as preconverter
+	--[[	For Future Reference: Regarding `libreoffice` as preconverter
 	  1. It prints errors to stdout (always, doesn't matter if it succeeded or it failed)
 	  2. Always writes the converted files to the filesystem, so no "Mario|Bros|Piping|Magic" for the data stream (https://ask.libreoffice.org/t/using-convert-to-output-to-stdout/38753)
 	  3. The `pdf:draw_pdf_Export` filter needs literal double quotes when defining its options (https://help.libreoffice.org/latest/en-US/text/shared/guide/pdf_params.html?&DbPAR=SHARED&System=UNIX#generaltext/shared/guide/pdf_params.xhp)
 	  3.1 Regarding double quotes and Lua strings, see https://www.lua.org/manual/5.1/manual.html#2.1 --]]
 	local libreoffice = Command("libreoffice")
-		:args({
+		:arg({
 			"--headless",
 			"--convert-to",
-			"pdf:draw_pdf_Export:{" ..
-				"\"PageRange\":{" ..
-					"\"type\":\"string\"," ..
-					"\"value\":" .. "\"" .. job.skip + 1 .. "\"" ..
-				"}" ..
-			"}",
+			"pdf:draw_pdf_Export:{"
+				.. '"PageRange":{'
+				.. '"type":"string",'
+				.. '"value":'
+				.. '"'
+				.. job.skip + 1
+				.. '"'
+				.. "}"
+				.. "}",
 			"--outdir",
 			tmp,
-			tostring(job.file.url)
+			tostring(job.file.url),
 		})
 		:stdin(Command.NULL)
 		:stdout(Command.PIPED)
 		:stderr(Command.NULL)
 		:output()
-		
+
 	if not libreoffice.status.success then
-		ya.err(libreoffice.stdout:match("LibreOffice .+"):gsub("%\n.*", "") .. " " .. libreoffice.stdout:match("Error .+"):gsub("%\n.*", ""))
+		ya.err(
+			libreoffice.stdout:match("LibreOffice .+"):gsub("%\n.*", "")
+				.. " "
+				.. libreoffice.stdout:match("Error .+"):gsub("%\n.*", "")
+		)
 		return nil, Err("Failed to preconvert `%s` to a temporary PDF", job.file.name)
 	end
 
@@ -80,7 +87,7 @@ function M:preload(job)
 	end
 
 	local output, err = Command("pdftoppm")
-		:args({
+		:arg({
 			"-singlefile",
 			"-jpeg",
 			"-jpegopt",
