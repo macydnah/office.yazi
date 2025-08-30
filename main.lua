@@ -38,30 +38,23 @@ function M:doc2pdf(job)
 		:arg({
 			"--headless",
 			"--convert-to",
-			"pdf:draw_pdf_Export:{"
-				.. '"PageRange":{'
-				.. '"type":"string",'
-				.. '"value":'
-				.. '"'
-				.. job.skip + 1
-				.. '"'
-				.. "}"
-				.. "}",
+			'pdf:draw_pdf_Export:{"PageRange":{"type":"string","value":"' .. job.skip + 1 .. '"}}',
 			"--outdir",
 			tmp,
 			tostring(job.file.url),
 		})
 		:stdin(Command.NULL)
 		:stdout(Command.PIPED)
-		:stderr(Command.NULL)
+		:stderr(Command.PIPED)
 		:output()
 
 	if not libreoffice.status.success then
-		ya.err(
-			libreoffice.stdout:match("LibreOffice .+"):gsub("%\n.*", "")
-				.. " "
-				.. libreoffice.stdout:match("Error .+"):gsub("%\n.*", "")
-		)
+		local output = libreoffice.stdout .. libreoffice.stderr
+		local version = (output:match("LibreOffice .+") or ""):gsub("%\n.*", "")
+		local error = (output:match("Error:? .+") or ""):gsub("%\n.*", "")
+		if version ~= "" or error ~= "" then
+			ya.err((version or "LibreOffice") .. " " .. (error or "Unknown error"))
+		end
 		return nil, Err("Failed to preconvert `%s` to a temporary PDF", job.file.name)
 	end
 
