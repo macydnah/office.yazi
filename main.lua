@@ -38,15 +38,7 @@ function M:doc2pdf(job)
 		:arg({
 			"--headless",
 			"--convert-to",
-			"pdf:draw_pdf_Export:{"
-				.. '"PageRange":{'
-				.. '"type":"string",'
-				.. '"value":'
-				.. '"'
-				.. job.skip + 1
-				.. '"'
-				.. "}"
-				.. "}",
+			'pdf:draw_pdf_Export:{"PageRange":{"type":"string","value":"' .. job.skip + 1 .. '"}}',
 			"--outdir",
 			tmp,
 			tostring(job.file.url),
