@@ -2,6 +2,47 @@
 
 local M = {}
 
+local function get_safe_username()
+	-- Neither `ya.uid()` nor `ya.user_name()` work on windows.
+	local username = os.getenv("USERNAME") or os.getenv("USER") or os.getenv("LOGNAME")
+
+	if not username then
+		return "fallback_user"
+	end
+
+	-- Sanitize
+	return username:gsub("[\\/% ]", "_"):lower()
+end
+
+local function get_libreoffice_command()
+	local names = { "libreoffice", "soffice" }
+	local os_name = ya.target_os()
+	local is_windows = os_name == "windows"
+
+	local CHECK_CMD = is_windows and "where" or "which"
+	local REDIRECTION = is_windows and ">nul 2>&1" or ">/dev/null 2>&1"
+
+	for _, name in ipairs(names) do
+		local cmd = CHECK_CMD .. " " .. name .. " " .. REDIRECTION
+		local ok, _, code = os.execute(cmd)
+		-- os.execute can return true/nil or status codes depending on Lua version
+		if ok == true or code == 0 then
+			return name
+		end
+	end
+
+	ya.notify({
+		title = "office",
+		content = "Could not find `libreoffice` or `soffice` in PATH.",
+		timeout = 5,
+		level = "error",
+	})
+	return nil
+end
+
+local LIBREOFFICE_COMMAND = get_libreoffice_command()
+local USERNAME = get_safe_username()
+
 function M:peek(job)
 	local start, cache = os.clock(), ya.file_cache(job)
 	if not cache then
@@ -27,14 +68,14 @@ function M:seek(job)
 end
 
 function M:doc2pdf(job)
-	local tmp = "/tmp/yazi-" .. ya.uid() .. "/" .. ya.hash("office.yazi") .. "/"
+	local tmp = "/tmp/yazi-" .. USERNAME .. "/" .. ya.hash("office.yazi") .. "/"
 
 	--[[	For Future Reference: Regarding `libreoffice` as preconverter
 	  1. It prints errors to stdout (always, doesn't matter if it succeeded or it failed)
 	  2. Always writes the converted files to the filesystem, so no "Mario|Bros|Piping|Magic" for the data stream (https://ask.libreoffice.org/t/using-convert-to-output-to-stdout/38753)
 	  3. The `pdf:draw_pdf_Export` filter needs literal double quotes when defining its options (https://help.libreoffice.org/latest/en-US/text/shared/guide/pdf_params.html?&DbPAR=SHARED&System=UNIX#generaltext/shared/guide/pdf_params.xhp)
 	  3.1 Regarding double quotes and Lua strings, see https://www.lua.org/manual/5.1/manual.html#2.1 --]]
-	local libreoffice = Command("libreoffice")
+	local libreoffice = Command(LIBREOFFICE_COMMAND)
 		:arg({
 			"--headless",
 			"--convert-to",
