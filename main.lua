@@ -1,4 +1,4 @@
---- @since 25.2.7
+--- @since 26.5.6
 
 local M = {}
 
@@ -15,14 +15,14 @@ function M:peek(job)
 
 	ya.sleep(math.max(0, rt.preview.image_delay / 1000 + start - os.clock()))
 	ya.image_show(cache, job.area)
-	ya.preview_widgets(job, {})
+	ya.preview_widget(job, {})
 end
 
 function M:seek(job)
 	local h = cx.active.current.hovered
 	if h and h.url == job.file.url then
 		local step = ya.clamp(-1, job.units, 1)
-		ya.manager_emit("peek", { math.max(0, cx.active.preview.skip + step), only_if = job.file.url })
+		ya.emit("peek", { math.max(0, cx.active.preview.skip + step), only_if = job.file.url })
 	end
 end
 
@@ -103,7 +103,7 @@ function M:preload(job)
 	elseif not output.status.success then
 		local pages = tonumber(output.stderr:match("the last page %((%d+)%)")) or 0
 		if job.skip > 0 and pages > 0 then
-			ya.mgr_emit("peek", { math.max(0, pages - 1), only_if = job.file.url, upper_bound = true })
+			ya.emit("peek", { math.max(0, pages - 1), only_if = job.file.url, upper_bound = true })
 		end
 		return true, Err("Failed to convert %s to image, stderr: %s", tmp_pdf, output.stderr)
 	end
