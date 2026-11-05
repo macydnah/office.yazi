@@ -29,7 +29,12 @@
 > ```
 
 ## Usage
-In your `yazi.toml` add rules to preloaders[^2] and previewers[^3] to run `office` plugin with office documents.
+In your `yazi.toml` add previewer rules[^3] to run the `office` plugin with office documents.
+
+Do not configure `office` as a preloader. Yazi runs preloaders concurrently for
+all matching files on the visible page, which can start many LibreOffice processes
+while browsing a directory. The previewer already generates and caches a preview
+for the hovered document.
 
 > [!NOTE]
 > Your config may be different depending if you're *appending*, *prepending* or *overriding* default rules.
@@ -40,22 +45,13 @@ For a general usecase, you may use the following rules
 ```toml
 [plugin]
 
-prepend_preloaders = [
-    # Office Documents
-    { mime = "application/openxmlformats-officedocument.*", run = "office" },
-    { mime = "application/oasis.opendocument.*", run = "office" },
-    { mime = "application/ms-*", run = "office" },
-    { mime = "application/msword", run = "office" },
-    { name = "*.docx", run = "office" },
-]
-
 prepend_previewers = [
     # Office Documents
     { mime = "application/openxmlformats-officedocument.*", run = "office" },
     { mime = "application/oasis.opendocument.*", run = "office" },
     { mime = "application/ms-*", run = "office" },
     { mime = "application/msword", run = "office" },
-    { name = "*.docx", run = "office" },
+    { url = "*.docx", run = "office" },
 ]
 ```
 
